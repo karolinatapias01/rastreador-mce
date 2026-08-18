@@ -3,48 +3,308 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rastreador MCE - COMPLETO</title>
+  <title>Rastreador MCE Premium</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #003366, #0052cc); color: white; padding: 20px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
-    .panel { background: white; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .btn { background: #003366; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 2px; }
-    .btn:hover { background: #00264d; }
+    body { 
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { 
+      background: linear-gradient(135deg, #003366 0%, #0052cc 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(0, 51, 102, 0.2);
+    }
+    .header h1 { font-size: 28px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .user-badge { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-size: 13px; }
+    .panel { 
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      padding: 24px;
+    }
+    .btn { 
+      background: #003366;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s;
+      margin: 2px;
+    }
+    .btn:hover { 
+      background: #00264d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,51,102,0.2);
+    }
     .btn-danger { background: #dc2626; }
     .btn-danger:hover { background: #991b1b; }
     .btn-success { background: #059669; }
     .btn-success:hover { background: #047857; }
-    .btn-sm { padding: 5px 10px; font-size: 12px; }
-    .input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-    .res-item { background: #f9f9f9; border-left: 4px solid #003366; padding: 15px; margin: 10px 0; border-radius: 5px; }
-    .res-header { display: flex; justify-content: space-between; align-items: center; }
-    .res-estab { font-size: 16px; font-weight: bold; color: #003366; }
-    .res-paso { font-size: 14px; color: #059669; margin: 8px 0; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
-    .tab { padding: 12px; background: none; border: none; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; }
-    .tab.active { border-bottom-color: #003366; color: #003366; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 999; }
+    .btn-sm { padding: 8px 12px; font-size: 12px; }
+    .input { 
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .input:focus { 
+      outline: none;
+      border-color: #003366;
+      box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+    }
+    .tabs { 
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tab { 
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: #6b7280;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .tab.active { 
+      color: #003366;
+      border-bottom-color: #003366;
+    }
+    .tab-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #dc2626;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .res-item { 
+      background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+      border-left: 4px solid #003366;
+      padding: 18px;
+      margin: 12px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+    .res-item:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .res-header { 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .res-estab { 
+      font-size: 16px;
+      font-weight: 700;
+      color: #003366;
+    }
+    .res-paso { 
+      font-size: 15px;
+      color: #059669;
+      margin: 10px 0;
+      font-weight: 600;
+    }
+    .res-fecha { 
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 8px;
+    }
+    .pasos-grid { 
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .paso { 
+      background: white;
+      border: 2px solid #e5e7eb;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .paso:hover { 
+      border-color: #0052cc;
+      background: #f0f6ff;
+      box-shadow: 0 2px 8px rgba(0,82,204,0.1);
+    }
+    .paso.active { 
+      background: #003366;
+      color: white;
+      border-color: #003366;
+      box-shadow: 0 4px 12px rgba(0,51,102,0.2);
+    }
+    .paso-icon { font-size: 20px; }
+    .paso-name { 
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 4px;
+      word-wrap: break-word;
+    }
+    .modal { 
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
     .modal.show { display: flex; }
-    .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; }
-    .notif { position: fixed; top: 20px; right: 20px; background: #059669; color: white; padding: 10px 15px; border-radius: 5px; z-index: 1000; }
-    .form-section { margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 5px; }
-    .pasos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
-    .paso { background: white; border: 2px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 5px; transition: 0.2s; }
-    .paso:hover { border-color: #0052cc; background: #f0f6ff; }
-    .paso.active { background: #003366; color: white; border-color: #003366; }
-    .paso-icon { font-size: 18px; }
-    .paso-name { font-size: 11px; }
-    .historial-item { background: #f9f9f9; padding: 10px; margin: 8px 0; border-radius: 5px; font-size: 13px; }
-    .historial-fecha { color: #666; }
-    .usuario-item { background: #f9f9f9; padding: 12px; margin: 8px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-content { 
+      background: white;
+      padding: 28px;
+      border-radius: 14px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .notif { 
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #059669;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 8px;
+      z-index: 1000;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn { 
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .historial-item { 
+      background: #f9fafb;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 3px solid #003366;
+      font-size: 13px;
+    }
+    .historial-fecha { 
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .usuario-card { 
+      background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 10px;
+      border-left: 4px solid #FFB81C;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+    .usuario-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .usuario-card.aprobado {
+      border-left-color: #059669;
+    }
     .usuario-info { flex: 1; }
-    .usuario-nombre { font-weight: bold; }
-    .usuario-rol { color: #666; font-size: 12px; }
-    .usuario-status { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 3px; font-size: 11px; }
+    .usuario-nombre { 
+      font-weight: 700;
+      color: #003366;
+      font-size: 14px;
+    }
+    .usuario-rol { 
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .usuario-status { 
+      background: #fef3c7;
+      color: #92400e;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .usuario-status.aprobado {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .usuario-actions { 
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select { 
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .empty { 
+      text-align: center;
+      padding: 40px 20px;
+      color: #9ca3af;
+    }
+    .notif-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #dc2626;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -75,30 +335,36 @@
     <div id="appPanel" style="display: none;">
       <div class="header">
         <h1>🔴 Rastreador MCE</h1>
-        <div>
-          <span id="userInfo" style="margin-right: 15px;"></span>
-          <button class="btn btn-danger" onclick="logout()">Cerrar</button>
+        <div class="header-right">
+          <div class="user-badge">
+            <span id="userInfo"></span>
+          </div>
+          <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
         </div>
       </div>
 
       <div class="tabs">
         <button class="tab active" onclick="switchTab('resoluciones')">📋 Resoluciones</button>
-        <button class="tab" id="tabUsuarios" onclick="switchTab('usuarios')" style="display: none;">👥 Usuarios</button>
+        <button class="tab" id="tabUsuarios" onclick="switchTab('usuarios')" style="display: none; position: relative;">
+          👥 Usuarios
+          <span class="tab-badge" id="userBadge" style="display: none;">0</span>
+        </button>
       </div>
 
       <div id="resoluciones-section">
         <div class="panel">
-          <button class="btn btn-success" onclick="openModal('nueva')" style="margin-bottom: 15px;">➕ Nueva Resolución</button>
-          <input type="text" id="buscar" class="input" placeholder="🔍 Buscar..." onkeyup="render()">
+          <button class="btn btn-success" onclick="openModal('nueva')" style="margin-bottom: 15px; padding: 12px 20px; font-size: 14px;">➕ Nueva Resolución</button>
+          <input type="text" id="buscar" class="input" placeholder="🔍 Buscar por nombre o establecimiento..." onkeyup="render()">
           <div id="lista"></div>
         </div>
       </div>
 
       <div id="usuarios-section" style="display: none;">
         <div class="panel">
-          <h3>Usuarios Pendientes de Aprobación</h3>
+          <h3 style="margin-bottom: 15px; color: #003366; font-size: 16px;">🔔 Usuarios Pendientes de Aprobación</h3>
           <div id="pendientes"></div>
-          <h3 style="margin-top: 20px;">Usuarios Aprobados</h3>
+          
+          <h3 style="margin-top: 30px; margin-bottom: 15px; color: #003366; font-size: 16px;">✅ Usuarios Aprobados</h3>
           <div id="aprobados"></div>
         </div>
       </div>
@@ -108,25 +374,25 @@
   <!-- MODALES -->
   <div class="modal" id="modalNueva">
     <div class="modal-content">
-      <h2>Nueva Resolución</h2>
+      <h2 style="color: #003366; margin-bottom: 16px;">📝 Nueva Resolución</h2>
       <input type="text" id="estabName" class="input" placeholder="Nombre del establecimiento">
       <button class="btn btn-success" onclick="crearResolucion()" style="width: 100%;">Crear</button>
-      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 5px;">Cancelar</button>
+      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 8px; background: #6b7280;">Cancelar</button>
     </div>
   </div>
 
   <div class="modal" id="modalEditar">
     <div class="modal-content">
-      <h2>Editar Establecimiento</h2>
+      <h2 style="color: #003366; margin-bottom: 16px;">✏️ Editar Establecimiento</h2>
       <input type="text" id="editEstabName" class="input" placeholder="Nombre">
       <button class="btn btn-success" onclick="guardarEdicion()" style="width: 100%;">Guardar</button>
-      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 5px;">Cancelar</button>
+      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 8px; background: #6b7280;">Cancelar</button>
     </div>
   </div>
 
   <div class="modal" id="modalHistorial">
     <div class="modal-content">
-      <h2>Historial de Cambios</h2>
+      <h2 style="color: #003366; margin-bottom: 16px;">📋 Historial de Cambios</h2>
       <div id="historialContent"></div>
       <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 10px;">Cerrar</button>
     </div>
@@ -165,7 +431,11 @@
     let editIdx = null;
 
     db.ref("rastreador/usuarios").on("value", snap => usuarios = snap.val() || {});
-    db.ref("rastreador/pendientes").on("value", snap => { pendientes = snap.val() || {}; renderUsuarios(); });
+    db.ref("rastreador/pendientes").on("value", snap => { 
+      pendientes = snap.val() || {}; 
+      renderUsuarios();
+      actualizarBadge();
+    });
     db.ref("rastreador/resoluciones").on("value", snap => { 
       let data = snap.val() || [];
       resoluciones = Array.isArray(data) ? data : Object.values(data);
@@ -182,8 +452,19 @@
     function switchTab(tab) {
       document.getElementById("resoluciones-section").style.display = tab === "resoluciones" ? "block" : "none";
       document.getElementById("usuarios-section").style.display = tab === "usuarios" ? "block" : "none";
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      event.target.classList.add("active");
+      document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
+      event.target.closest(".tab").classList.add("active");
+    }
+
+    function actualizarBadge() {
+      const badge = document.getElementById("userBadge");
+      const count = Object.keys(pendientes).length;
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = "flex";
+      } else {
+        badge.style.display = "none";
+      }
     }
 
     function login() {
@@ -261,7 +542,8 @@
       document.getElementById("authPanel").style.display = "none";
       document.getElementById("appPanel").style.display = "block";
       const u = usuarios[usuarioActual];
-      document.getElementById("userInfo").textContent = u.nombre + (u.rol === "admin" ? " (ADMIN)" : "");
+      const rol = u.rol === "admin" ? " (ADMIN)" : "";
+      document.getElementById("userInfo").textContent = u.nombre + rol;
       document.getElementById("tabUsuarios").style.display = u.rol === "admin" ? "block" : "none";
       render();
     }
@@ -272,7 +554,7 @@
       const filtradas = resoluciones.filter(r => String(r.estab || "").toLowerCase().includes(buscar));
 
       if (!filtradas.length) {
-        lista.innerHTML = "<p>Sin resoluciones</p>";
+        lista.innerHTML = '<div class="empty">📝 Sin resoluciones</div>';
         return;
       }
 
@@ -285,9 +567,9 @@
           <div class="res-header">
             <div class="res-estab">${r.estab}</div>
             ${esAdmin ? `<div>
-              <button class="btn btn-sm" onclick="openModal('editar', ${idx})">✏️</button>
-              <button class="btn btn-sm" onclick="openModal('historial', ${idx})">📋</button>
-              <button class="btn btn-sm btn-danger" onclick="eliminarResolucion(${idx})">🗑️</button>
+              <button class="btn btn-sm" onclick="openModal('editar', ${idx})" title="Editar">✏️</button>
+              <button class="btn btn-sm" onclick="openModal('historial', ${idx})" title="Historial">📋</button>
+              <button class="btn btn-sm btn-danger" onclick="eliminarResolucion(${idx})" title="Eliminar">🗑️</button>
             </div>` : ""}
           </div>
           <div class="res-paso">${paso.icon} ${paso.nombre}</div>
@@ -296,9 +578,9 @@
         if (esAdmin) {
           html += '<div class="pasos-grid">';
           html += PASOS.map(p => 
-            `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso(${idx}, ${p.num})">
+            `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso(${idx}, ${p.num})" title="${p.nombre}">
               <div class="paso-icon">${p.icon}</div>
-              <div class="paso-name">${p.nombre.slice(0, 10)}</div>
+              <div class="paso-name">${p.nombre}</div>
             </div>`
           ).join("");
           html += '</div>';
@@ -416,30 +698,34 @@
       const aprovDiv = document.getElementById("aprobados");
 
       const pendHtml = Object.entries(pendientes).map(([user, u]) => `
-        <div class="usuario-item">
+        <div class="usuario-card">
           <div class="usuario-info">
-            <div class="usuario-nombre">${u.nombre}</div>
+            <div class="usuario-nombre">🆕 ${u.nombre}</div>
             <div class="usuario-rol">${user} <span class="usuario-status">Pendiente</span></div>
           </div>
-          <button class="btn btn-success btn-sm" onclick="aprobarUsuario('${user}')">✅ Aprobar</button>
+          <div class="usuario-actions">
+            <button class="btn btn-success btn-sm" onclick="aprobarUsuario('${user}')">✅ Aprobar</button>
+          </div>
         </div>
       `).join("");
 
       const aprovHtml = Object.entries(usuarios).filter(([user]) => user !== usuarioActual).map(([user, u]) => `
-        <div class="usuario-item">
+        <div class="usuario-card aprobado">
           <div class="usuario-info">
-            <div class="usuario-nombre">${u.nombre}</div>
-            <div class="usuario-rol">${user} - ${u.rol}</div>
+            <div class="usuario-nombre">✓ ${u.nombre}</div>
+            <div class="usuario-rol">${user} - <span class="usuario-status aprobado">${u.rol}</span></div>
           </div>
-          <select onchange="cambiarRol('${user}', this.value)" style="padding: 5px;">
-            <option value="user" ${u.rol === "user" ? "selected" : ""}>Usuario</option>
-            <option value="admin" ${u.rol === "admin" ? "selected" : ""}>Admin</option>
-          </select>
+          <div class="usuario-actions">
+            <select onchange="cambiarRol('${user}', this.value)">
+              <option value="user" ${u.rol === "user" ? "selected" : ""}>Usuario</option>
+              <option value="admin" ${u.rol === "admin" ? "selected" : ""}>Admin</option>
+            </select>
+          </div>
         </div>
       `).join("");
 
-      pendDiv.innerHTML = pendHtml || "<p>Sin solicitudes pendientes</p>";
-      aprovDiv.innerHTML = aprovHtml || "<p>Sin usuarios aprobados</p>";
+      pendDiv.innerHTML = pendHtml || '<div class="empty">✅ Sin solicitudes pendientes</div>';
+      aprovDiv.innerHTML = aprovHtml || '<div class="empty">📝 Sin usuarios aprobados</div>';
     }
 
     function aprobarUsuario(user) {
@@ -462,7 +748,7 @@
       div.className = "notif";
       div.textContent = msg;
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 2000);
+      setTimeout(() => div.remove(), 2500);
     }
 
     window.addEventListener("click", e => {
