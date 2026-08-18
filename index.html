@@ -353,7 +353,9 @@
 
       <div id="resoluciones-section">
         <div class="panel">
-          <button class="btn btn-success" onclick="openModal('nueva')" style="margin-bottom: 15px; padding: 12px 20px; font-size: 14px;">➕ Nueva Resolución</button>
+          <div id="adminActions" style="display: none; margin-bottom: 15px;">
+            <button class="btn btn-success" onclick="openModal('nueva')" style="padding: 12px 20px; font-size: 14px;">➕ Nueva Resolución</button>
+          </div>
           <input type="text" id="buscar" class="input" placeholder="🔍 Buscar por nombre o establecimiento..." onkeyup="render()">
           <div id="lista"></div>
         </div>
@@ -542,9 +544,11 @@
       document.getElementById("authPanel").style.display = "none";
       document.getElementById("appPanel").style.display = "block";
       const u = usuarios[usuarioActual];
-      const rol = u.rol === "admin" ? " (ADMIN)" : "";
+      const esAdmin = u.rol === "admin";
+      const rol = esAdmin ? " (ADMIN)" : "";
       document.getElementById("userInfo").textContent = u.nombre + rol;
-      document.getElementById("tabUsuarios").style.display = u.rol === "admin" ? "block" : "none";
+      document.getElementById("tabUsuarios").style.display = esAdmin ? "block" : "none";
+      document.getElementById("adminActions").style.display = esAdmin ? "block" : "none";
       render();
     }
 
