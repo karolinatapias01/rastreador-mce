@@ -571,9 +571,9 @@
           <div class="res-header">
             <div class="res-estab">${r.estab}</div>
             ${esAdmin ? `<div>
-              <button class="btn btn-sm" onclick="openModal('editar', ${idx})" title="Editar">✏️</button>
-              <button class="btn btn-sm" onclick="openModal('historial', ${idx})" title="Historial">📋</button>
-              <button class="btn btn-sm btn-danger" onclick="eliminarResolucion(${idx})" title="Eliminar">🗑️</button>
+              <button class="btn btn-sm" onclick="openModal('editar', '${r.id}')" title="Editar">✏️</button>
+              <button class="btn btn-sm" onclick="openModal('historial', '${r.id}')" title="Historial">📋</button>
+              <button class="btn btn-sm btn-danger" onclick="eliminarResolucion('${r.id}')" title="Eliminar">🗑️</button>
             </div>` : ""}
           </div>
           <div class="res-paso">${paso.icon} ${paso.nombre}</div>
@@ -582,7 +582,7 @@
         if (esAdmin) {
           html += '<div class="pasos-grid">';
           html += PASOS.map(p => 
-            `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso(${idx}, ${p.num})" title="${p.nombre}">
+            `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso('${r.id}', ${p.num})" title="${p.nombre}">
               <div class="paso-icon">${p.icon}</div>
               <div class="paso-name">${p.nombre}</div>
             </div>`
@@ -624,26 +624,40 @@
       notif("✅ Resolución creada");
     }
 
-    function cambiarPaso(idx, paso) {
+    function cambiarPaso(id, paso) {
+      const idx = resoluciones.findIndex(r => r.id === id);
+      if (idx === -1) {
+        notif("❌ Error al encontrar resolución");
+        return;
+      }
+
       const r = resoluciones[idx];
       const fecha = new Date().toLocaleString("es-CO");
       const usuario = usuarios[usuarioActual].nombre;
-      const p = PASOS.find(x => x.num === paso);
+      const p = PASOS.find(x => x.num === Number(paso));
 
-      r.paso = paso;
+      r.paso = Number(paso);
       r.fechas = r.fechas || {};
       r.autores = r.autores || {};
       r.fechas[paso] = fecha;
       r.autores[paso] = usuario;
       r.historial = r.historial || [];
-      r.historial.push({ paso, fecha, usuario, accion: `Cambio a: ${p.nombre}` });
+      r.historial.push({ paso: Number(paso), fecha, usuario, accion: `Cambio a: ${p.nombre}` });
 
-      db.ref("rastreador/resoluciones").set(resoluciones);
-      notif(`✅ ${p.nombre}`);
+      db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
+        notif(`✅ ${p.nombre}`);
+      }).catch(err => {
+        notif(`❌ ${err.message}`);
+      });
     }
 
-    function openModal(type, idx) {
-      modalActual = idx;
+    function openModal(type, id) {
+      const idx = resoluciones.findIndex(r => r.id === id);
+      if (idx === -1) {
+        notif("❌ Error");
+        return;
+      }
+      
       if (type === "nueva") {
         document.getElementById("modalNueva").classList.add("show");
         document.getElementById("estabName").focus();
@@ -651,6 +665,7 @@
         document.getElementById("editEstabName").value = resoluciones[idx].estab;
         document.getElementById("modalEditar").classList.add("show");
         document.getElementById("editEstabName").focus();
+        modalActual = id;
       } else if (type === "historial") {
         const hist = resoluciones[idx].historial || [];
         let html = hist.map(h => `
@@ -671,22 +686,34 @@
         return;
       }
 
-      resoluciones[modalActual].estab = nuevoNombre;
+      const idx = resoluciones.findIndex(r => r.id === modalActual);
+      if (idx === -1) {
+        notif("❌ Error");
+        return;
+      }
+
+      resoluciones[idx].estab = nuevoNombre;
       const fecha = new Date().toLocaleString("es-CO");
       const usuario = usuarios[usuarioActual].nombre;
-      resoluciones[modalActual].historial = resoluciones[modalActual].historial || [];
-      resoluciones[modalActual].historial.push({ paso: resoluciones[modalActual].paso, fecha, usuario, accion: "Edición de nombre" });
+      resoluciones[idx].historial = resoluciones[idx].historial || [];
+      resoluciones[idx].historial.push({ paso: resoluciones[idx].paso, fecha, usuario, accion: "Edición de nombre" });
 
-      db.ref("rastreador/resoluciones").set(resoluciones);
-      closeModal();
-      notif("✅ Guardado");
+      db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
+        closeModal();
+        notif("✅ Guardado");
+      }).catch(err => {
+        notif(`❌ ${err.message}`);
+      });
     }
 
-    function eliminarResolucion(idx) {
+    function eliminarResolucion(id) {
       if (confirm("¿Eliminar esta resolución?")) {
-        resoluciones.splice(idx, 1);
-        db.ref("rastreador/resoluciones").set(resoluciones);
-        notif("✅ Eliminado");
+        resoluciones = resoluciones.filter(r => r.id !== id);
+        db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
+          notif("✅ Eliminado");
+        }).catch(err => {
+          notif(`❌ ${err.message}`);
+        });
       }
     }
 
