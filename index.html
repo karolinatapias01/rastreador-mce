@@ -3,71 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rastreador MCE</title>
+  <title>Rastreador MCE - COMPLETO</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #003366; color: #333; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .header { background: #003366; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
-    .panel { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-    .btn { background: #003366; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .header { background: linear-gradient(135deg, #003366, #0052cc); color: white; padding: 20px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .panel { background: white; padding: 20px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .btn { background: #003366; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 2px; }
     .btn:hover { background: #00264d; }
     .btn-danger { background: #dc2626; }
     .btn-danger:hover { background: #991b1b; }
     .btn-success { background: #059669; }
+    .btn-success:hover { background: #047857; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
     .input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-    .res-item { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #003366; }
+    .res-item { background: #f9f9f9; border-left: 4px solid #003366; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .res-header { display: flex; justify-content: space-between; align-items: center; }
+    .res-estab { font-size: 16px; font-weight: bold; color: #003366; }
+    .res-paso { font-size: 14px; color: #059669; margin: 8px 0; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+    .tab { padding: 12px; background: none; border: none; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; }
+    .tab.active { border-bottom-color: #003366; color: #003366; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 999; }
     .modal.show { display: flex; }
-    .modal-box { background: white; padding: 20px; border-radius: 10px; max-width: 400px; }
-    .notif { position: fixed; top: 20px; right: 20px; background: #059669; color: white; padding: 15px; border-radius: 5px; z-index: 1000; }
+    .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .notif { position: fixed; top: 20px; right: 20px; background: #059669; color: white; padding: 10px 15px; border-radius: 5px; z-index: 1000; }
+    .form-section { margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 5px; }
+    .pasos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
+    .paso { background: white; border: 2px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+    .paso:hover { border-color: #0052cc; background: #f0f6ff; }
+    .paso.active { background: #003366; color: white; border-color: #003366; }
+    .paso-icon { font-size: 18px; }
+    .paso-name { font-size: 11px; }
+    .historial-item { background: #f9f9f9; padding: 10px; margin: 8px 0; border-radius: 5px; font-size: 13px; }
+    .historial-fecha { color: #666; }
+    .usuario-item { background: #f9f9f9; padding: 12px; margin: 8px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .usuario-info { flex: 1; }
+    .usuario-nombre { font-weight: bold; }
+    .usuario-rol { color: #666; font-size: 12px; }
+    .usuario-status { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 3px; font-size: 11px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div id="authSection">
-      <div class="panel">
-        <h1>🔐 Rastreador MCE</h1>
-        <div style="margin-top: 20px;">
-          <input type="text" id="loginUser" class="input" placeholder="Usuario">
-          <input type="password" id="loginPass" class="input" placeholder="Contraseña">
-          <button class="btn" onclick="login()">Ingresar</button>
-          <button class="btn" onclick="mostrarRegistro()" style="margin-left: 10px;">Registrarse</button>
-          <div id="loginMsg" style="margin-top: 10px; color: red;"></div>
-        </div>
+    <div id="authPanel" class="panel">
+      <h2>🔐 Rastreador MCE</h2>
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('login')">Ingresar</button>
+        <button class="tab" onclick="showTab('registro')">Registrarse</button>
+      </div>
+
+      <div id="login" class="form-section">
+        <input type="text" id="loginUser" class="input" placeholder="Usuario">
+        <input type="password" id="loginPass" class="input" placeholder="Contraseña">
+        <button class="btn btn-success" onclick="login()" style="width: 100%;">Ingresar</button>
+        <div id="loginMsg" style="margin-top: 10px; color: red;"></div>
+      </div>
+
+      <div id="registro" class="form-section" style="display: none;">
+        <input type="text" id="regNombre" class="input" placeholder="Nombre completo">
+        <input type="text" id="regUser" class="input" placeholder="Usuario">
+        <input type="password" id="regPass" class="input" placeholder="Contraseña (mín 6)">
+        <button class="btn btn-success" onclick="registrar()" style="width: 100%;">Crear cuenta</button>
+        <div id="regMsg" style="margin-top: 10px; color: red;"></div>
       </div>
     </div>
 
-    <div id="appSection" style="display: none;">
+    <div id="appPanel" style="display: none;">
       <div class="header">
         <h1>🔴 Rastreador MCE</h1>
         <div>
-          <span id="userInfo"></span>
-          <button class="btn btn-danger" onclick="logout()" style="margin-left: 10px;">Cerrar</button>
+          <span id="userInfo" style="margin-right: 15px;"></span>
+          <button class="btn btn-danger" onclick="logout()">Cerrar</button>
         </div>
       </div>
 
-      <div id="adminSection" style="display: none;">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('resoluciones')">📋 Resoluciones</button>
+        <button class="tab" id="tabUsuarios" onclick="switchTab('usuarios')" style="display: none;">👥 Usuarios</button>
+      </div>
+
+      <div id="resoluciones-section">
         <div class="panel">
-          <button class="btn btn-success" onclick="abrirModal()">➕ Nueva Resolución</button>
+          <button class="btn btn-success" onclick="openModal('nueva')" style="margin-bottom: 15px;">➕ Nueva Resolución</button>
+          <input type="text" id="buscar" class="input" placeholder="🔍 Buscar..." onkeyup="render()">
+          <div id="lista"></div>
         </div>
       </div>
 
-      <div class="panel">
-        <input type="text" id="buscar" class="input" placeholder="🔍 Buscar..." onkeyup="renderizar()">
-        <div id="lista"></div>
+      <div id="usuarios-section" style="display: none;">
+        <div class="panel">
+          <h3>Usuarios Pendientes de Aprobación</h3>
+          <div id="pendientes"></div>
+          <h3 style="margin-top: 20px;">Usuarios Aprobados</h3>
+          <div id="aprobados"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="modal">
-    <div class="modal-box">
-      <h2>Nuevo Establecimiento</h2>
-      <input type="text" id="nombreEstab" class="input" placeholder="Nombre del establecimiento">
+  <!-- MODALES -->
+  <div class="modal" id="modalNueva">
+    <div class="modal-content">
+      <h2>Nueva Resolución</h2>
+      <input type="text" id="estabName" class="input" placeholder="Nombre del establecimiento">
       <button class="btn btn-success" onclick="crearResolucion()" style="width: 100%;">Crear</button>
-      <button class="btn" onclick="cerrarModal()" style="width: 100%; margin-top: 5px;">Cancelar</button>
+      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 5px;">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalEditar">
+    <div class="modal-content">
+      <h2>Editar Establecimiento</h2>
+      <input type="text" id="editEstabName" class="input" placeholder="Nombre">
+      <button class="btn btn-success" onclick="guardarEdicion()" style="width: 100%;">Guardar</button>
+      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 5px;">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalHistorial">
+    <div class="modal-content">
+      <h2>Historial de Cambios</h2>
+      <div id="historialContent"></div>
+      <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 10px;">Cerrar</button>
     </div>
   </div>
 
@@ -85,10 +146,6 @@
     firebase.initializeApp(config);
     const db = firebase.database();
 
-    let usuarios = {};
-    let resoluciones = [];
-    let usuarioActual = null;
-
     const PASOS = [
       { num: 0, nombre: "Omar sin elaborar", icon: "👨" },
       { num: 1, nombre: "Doctor Nilson", icon: "📋" },
@@ -100,42 +157,53 @@
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
 
-    // Cargar usuarios
-    db.ref("rastreador/usuarios").on("value", snap => {
-      usuarios = snap.val() || {};
-    });
+    let usuarioActual = null;
+    let usuarios = {};
+    let pendientes = {};
+    let resoluciones = [];
+    let modalActual = null;
+    let editIdx = null;
 
-    // Cargar resoluciones
-    db.ref("rastreador/resoluciones").on("value", snap => {
+    db.ref("rastreador/usuarios").on("value", snap => usuarios = snap.val() || {});
+    db.ref("rastreador/pendientes").on("value", snap => { pendientes = snap.val() || {}; renderUsuarios(); });
+    db.ref("rastreador/resoluciones").on("value", snap => { 
       let data = snap.val() || [];
       resoluciones = Array.isArray(data) ? data : Object.values(data);
-      if (usuarioActual) renderizar();
+      render();
     });
 
-    function ahora() {
-      const d = new Date();
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mn = String(d.getMinutes()).padStart(2, '0');
-      return dd + "-" + mm + "-" + yyyy + " " + hh + ":" + mn;
+    function showTab(tab) {
+      document.getElementById("login").style.display = tab === "login" ? "block" : "none";
+      document.getElementById("registro").style.display = tab === "registro" ? "block" : "none";
+      document.querySelectorAll(".tab")[0].classList.toggle("active");
+      document.querySelectorAll(".tab")[1].classList.toggle("active");
+    }
+
+    function switchTab(tab) {
+      document.getElementById("resoluciones-section").style.display = tab === "resoluciones" ? "block" : "none";
+      document.getElementById("usuarios-section").style.display = tab === "usuarios" ? "block" : "none";
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      event.target.classList.add("active");
     }
 
     function login() {
-      const user = document.getElementById("loginUser").value.toLowerCase().trim();
+      const user = document.getElementById("loginUser").value.trim().toLowerCase();
       const pass = document.getElementById("loginPass").value;
       const msg = document.getElementById("loginMsg");
 
       msg.textContent = "";
-
       if (!user || !pass) {
         msg.textContent = "Completa usuario y contraseña";
         return;
       }
 
+      if (pendientes[user]) {
+        msg.textContent = "⏳ Solicitud pendiente de aprobación";
+        return;
+      }
+
       if (!usuarios[user] || usuarios[user].pass !== pass) {
-        msg.textContent = "Usuario o contraseña incorrectos";
+        msg.textContent = "❌ Usuario o contraseña incorrectos";
         return;
       }
 
@@ -143,56 +211,65 @@
       mostrarApp();
     }
 
-    function mostrarRegistro() {
-      const user = prompt("Usuario:");
-      if (!user) return;
-      const pass = prompt("Contraseña (mín 6 caracteres):");
-      if (!pass || pass.length < 6) {
-        alert("Contraseña muy corta");
+    function registrar() {
+      const nombre = document.getElementById("regNombre").value.trim();
+      const user = document.getElementById("regUser").value.trim().toLowerCase();
+      const pass = document.getElementById("regPass").value;
+      const msg = document.getElementById("regMsg");
+
+      msg.textContent = "";
+      if (!nombre || !user || !pass) {
+        msg.textContent = "Completa todos los campos";
         return;
       }
-      const nombre = prompt("Nombre completo:");
-      if (!nombre) return;
 
-      const userLower = user.toLowerCase().trim();
-      if (usuarios[userLower]) {
-        alert("Este usuario ya existe");
+      if (pass.length < 6) {
+        msg.textContent = "Contraseña mín 6 caracteres";
+        return;
+      }
+
+      if (usuarios[user] || pendientes[user]) {
+        msg.textContent = "Este usuario ya existe";
         return;
       }
 
       if (Object.keys(usuarios).length === 0) {
-        usuarios[userLower] = { nombre, pass, rol: "admin" };
+        usuarios[user] = { nombre, pass, rol: "admin" };
         db.ref("rastreador/usuarios").set(usuarios);
-        alert("¡Eres ADMIN! Inicia sesión.");
+        msg.style.color = "#059669";
+        msg.textContent = "✅ ¡Eres ADMIN! Ve a Ingresar";
       } else {
-        alert("Solicitud de registro enviada (pendiente de aprobación)");
+        pendientes[user] = { nombre, pass };
+        db.ref("rastreador/pendientes").set(pendientes);
+        msg.style.color = "#f59e0b";
+        msg.textContent = "⏳ Solicitud enviada (pendiente de aprobación)";
       }
+
+      document.getElementById("regNombre").value = "";
+      document.getElementById("regUser").value = "";
+      document.getElementById("regPass").value = "";
+      setTimeout(() => showTab("login"), 1500);
     }
 
     function logout() {
       usuarioActual = null;
-      document.getElementById("authSection").style.display = "block";
-      document.getElementById("appSection").style.display = "none";
-      document.getElementById("loginUser").value = "";
-      document.getElementById("loginPass").value = "";
+      document.getElementById("authPanel").style.display = "block";
+      document.getElementById("appPanel").style.display = "none";
     }
 
     function mostrarApp() {
-      document.getElementById("authSection").style.display = "none";
-      document.getElementById("appSection").style.display = "block";
-      const usuario = usuarios[usuarioActual];
-      const admin = usuario.rol === "admin" ? " (ADMIN)" : "";
-      document.getElementById("userInfo").textContent = usuario.nombre + admin;
-      document.getElementById("adminSection").style.display = usuario.rol === "admin" ? "block" : "none";
-      renderizar();
+      document.getElementById("authPanel").style.display = "none";
+      document.getElementById("appPanel").style.display = "block";
+      const u = usuarios[usuarioActual];
+      document.getElementById("userInfo").textContent = u.nombre + (u.rol === "admin" ? " (ADMIN)" : "");
+      document.getElementById("tabUsuarios").style.display = u.rol === "admin" ? "block" : "none";
+      render();
     }
 
-    function renderizar() {
+    function render() {
       const lista = document.getElementById("lista");
       const buscar = (document.getElementById("buscar").value || "").toLowerCase();
-      const filtradas = resoluciones.filter(r => 
-        String(r.estab || "").toLowerCase().includes(buscar)
-      );
+      const filtradas = resoluciones.filter(r => String(r.estab || "").toLowerCase().includes(buscar));
 
       if (!filtradas.length) {
         lista.innerHTML = "<p>Sin resoluciones</p>";
@@ -201,43 +278,46 @@
 
       const esAdmin = usuarios[usuarioActual].rol === "admin";
       lista.innerHTML = filtradas.map((r, idx) => {
-        const paso = PASOS.find(p => p.num === Number(r.paso)) || PASOS[0];
+        const paso = PASOS.find(p => p.num === r.paso) || PASOS[0];
         const fecha = r.fechas ? r.fechas[r.paso] : "-";
 
-        let html = `
-          <div class="res-item">
-            <strong>${r.estab}</strong><br>
-            ${paso.icon} ${paso.nombre}<br>
-            Fecha: ${fecha}
-        `;
+        let html = `<div class="res-item">
+          <div class="res-header">
+            <div class="res-estab">${r.estab}</div>
+            ${esAdmin ? `<div>
+              <button class="btn btn-sm" onclick="openModal('editar', ${idx})">✏️</button>
+              <button class="btn btn-sm" onclick="openModal('historial', ${idx})">📋</button>
+              <button class="btn btn-sm btn-danger" onclick="eliminarResolucion(${idx})">🗑️</button>
+            </div>` : ""}
+          </div>
+          <div class="res-paso">${paso.icon} ${paso.nombre}</div>
+          <div class="res-fecha">🕒 ${fecha}</div>`;
 
         if (esAdmin) {
-          html += '<br><br>';
+          html += '<div class="pasos-grid">';
           html += PASOS.map(p => 
-            `<button class="btn" style="padding: 5px 10px; margin: 2px; ${p.num === Number(r.paso) ? 'background: #FFB81C; color: black;' : ''}" onclick="cambiarPaso(${idx}, ${p.num})">${p.icon}</button>`
-          ).join('');
+            `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso(${idx}, ${p.num})">
+              <div class="paso-icon">${p.icon}</div>
+              <div class="paso-name">${p.nombre.slice(0, 10)}</div>
+            </div>`
+          ).join("");
+          html += '</div>';
         }
 
         html += '</div>';
         return html;
-      }).join('');
+      }).join("");
     }
 
     function crearResolucion() {
-      const input = document.getElementById("nombreEstab");
-      if (!input) {
-        alert("Error: input no encontrado");
-        return;
-      }
-
-      const estab = input.value.trim();
+      const estab = document.getElementById("estabName").value.trim();
       if (!estab) {
-        alert("Escribe el nombre del establecimiento");
+        notif("❌ Escribe el nombre");
         return;
       }
 
-      const usuario = usuarios[usuarioActual];
-      const fecha = ahora();
+      const fecha = new Date().toLocaleString("es-CO");
+      const usuario = usuarios[usuarioActual].nombre;
       const id = Date.now().toString();
 
       const nueva = {
@@ -246,53 +326,138 @@
         estab,
         paso: 0,
         fechas: { 0: fecha },
-        autores: { 0: usuario.nombre }
+        autores: { 0: usuario },
+        historial: [{ paso: 0, fecha, usuario, accion: "Creación" }]
       };
 
       resoluciones.push(nueva);
+      db.ref("rastreador/resoluciones").set(resoluciones);
 
-      db.ref("rastreador/resoluciones").set(resoluciones)
-        .then(() => {
-          input.value = "";
-          cerrarModal();
-          mostrarNotif("✅ Creado");
-          renderizar();
-        })
-        .catch(err => {
-          alert("Error: " + err.message);
-        });
+      document.getElementById("estabName").value = "";
+      closeModal();
+      notif("✅ Resolución creada");
     }
 
     function cambiarPaso(idx, paso) {
       const r = resoluciones[idx];
-      const fecha = ahora();
-      const usuario = usuarios[usuarioActual];
+      const fecha = new Date().toLocaleString("es-CO");
+      const usuario = usuarios[usuarioActual].nombre;
+      const p = PASOS.find(x => x.num === paso);
 
       r.paso = paso;
       r.fechas = r.fechas || {};
       r.autores = r.autores || {};
       r.fechas[paso] = fecha;
-      r.autores[paso] = usuario.nombre;
+      r.autores[paso] = usuario;
+      r.historial = r.historial || [];
+      r.historial.push({ paso, fecha, usuario, accion: `Cambio a: ${p.nombre}` });
 
-      db.ref("rastreador/resoluciones").set(resoluciones)
-        .then(() => {
-          renderizar();
-          mostrarNotif("✅ Actualizado");
-        })
-        .catch(err => alert("Error: " + err.message));
+      db.ref("rastreador/resoluciones").set(resoluciones);
+      notif(`✅ ${p.nombre}`);
     }
 
-    function abrirModal() {
-      document.getElementById("modal").classList.add("show");
-      document.getElementById("nombreEstab").value = "";
-      document.getElementById("nombreEstab").focus();
+    function openModal(type, idx) {
+      modalActual = idx;
+      if (type === "nueva") {
+        document.getElementById("modalNueva").classList.add("show");
+        document.getElementById("estabName").focus();
+      } else if (type === "editar") {
+        document.getElementById("editEstabName").value = resoluciones[idx].estab;
+        document.getElementById("modalEditar").classList.add("show");
+        document.getElementById("editEstabName").focus();
+      } else if (type === "historial") {
+        const hist = resoluciones[idx].historial || [];
+        let html = hist.map(h => `
+          <div class="historial-item">
+            <strong>${h.accion}</strong><br>
+            <span class="historial-fecha">👤 ${h.usuario} - 🕒 ${h.fecha}</span>
+          </div>
+        `).join("");
+        document.getElementById("historialContent").innerHTML = html;
+        document.getElementById("modalHistorial").classList.add("show");
+      }
     }
 
-    function cerrarModal() {
-      document.getElementById("modal").classList.remove("show");
+    function guardarEdicion() {
+      const nuevoNombre = document.getElementById("editEstabName").value.trim();
+      if (!nuevoNombre) {
+        notif("❌ Escribe un nombre");
+        return;
+      }
+
+      resoluciones[modalActual].estab = nuevoNombre;
+      const fecha = new Date().toLocaleString("es-CO");
+      const usuario = usuarios[usuarioActual].nombre;
+      resoluciones[modalActual].historial = resoluciones[modalActual].historial || [];
+      resoluciones[modalActual].historial.push({ paso: resoluciones[modalActual].paso, fecha, usuario, accion: "Edición de nombre" });
+
+      db.ref("rastreador/resoluciones").set(resoluciones);
+      closeModal();
+      notif("✅ Guardado");
     }
 
-    function mostrarNotif(msg) {
+    function eliminarResolucion(idx) {
+      if (confirm("¿Eliminar esta resolución?")) {
+        resoluciones.splice(idx, 1);
+        db.ref("rastreador/resoluciones").set(resoluciones);
+        notif("✅ Eliminado");
+      }
+    }
+
+    function closeModal() {
+      document.querySelectorAll(".modal").forEach(m => m.classList.remove("show"));
+      modalActual = null;
+    }
+
+    function renderUsuarios() {
+      if (usuarios[usuarioActual].rol !== "admin") return;
+
+      const pendDiv = document.getElementById("pendientes");
+      const aprovDiv = document.getElementById("aprobados");
+
+      const pendHtml = Object.entries(pendientes).map(([user, u]) => `
+        <div class="usuario-item">
+          <div class="usuario-info">
+            <div class="usuario-nombre">${u.nombre}</div>
+            <div class="usuario-rol">${user} <span class="usuario-status">Pendiente</span></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="aprobarUsuario('${user}')">✅ Aprobar</button>
+        </div>
+      `).join("");
+
+      const aprovHtml = Object.entries(usuarios).filter(([user]) => user !== usuarioActual).map(([user, u]) => `
+        <div class="usuario-item">
+          <div class="usuario-info">
+            <div class="usuario-nombre">${u.nombre}</div>
+            <div class="usuario-rol">${user} - ${u.rol}</div>
+          </div>
+          <select onchange="cambiarRol('${user}', this.value)" style="padding: 5px;">
+            <option value="user" ${u.rol === "user" ? "selected" : ""}>Usuario</option>
+            <option value="admin" ${u.rol === "admin" ? "selected" : ""}>Admin</option>
+          </select>
+        </div>
+      `).join("");
+
+      pendDiv.innerHTML = pendHtml || "<p>Sin solicitudes pendientes</p>";
+      aprovDiv.innerHTML = aprovHtml || "<p>Sin usuarios aprobados</p>";
+    }
+
+    function aprobarUsuario(user) {
+      if (!pendientes[user]) return;
+      usuarios[user] = { ...pendientes[user], rol: "user" };
+      delete pendientes[user];
+      db.ref("rastreador/usuarios").set(usuarios);
+      db.ref("rastreador/pendientes").set(pendientes);
+      notif("✅ Usuario aprobado");
+    }
+
+    function cambiarRol(user, nuevoRol) {
+      usuarios[user].rol = nuevoRol;
+      db.ref("rastreador/usuarios").set(usuarios);
+      notif("✅ Rol actualizado");
+    }
+
+    function notif(msg) {
       const div = document.createElement("div");
       div.className = "notif";
       div.textContent = msg;
@@ -301,7 +466,7 @@
     }
 
     window.addEventListener("click", e => {
-      if (e.target.id === "modal") cerrarModal();
+      if (e.target.classList.contains("modal")) closeModal();
     });
   </script>
 </body>
