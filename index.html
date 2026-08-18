@@ -553,6 +553,10 @@
     }
 
     function render() {
+      if (!usuarioActual || !usuarios[usuarioActual]) {
+        return;
+      }
+
       const lista = document.getElementById("lista");
       const buscar = (document.getElementById("buscar").value || "").toLowerCase();
       const filtradas = resoluciones.filter(r => String(r.estab || "").toLowerCase().includes(buscar));
@@ -723,7 +727,7 @@
     }
 
     function renderUsuarios() {
-      if (usuarios[usuarioActual].rol !== "admin") return;
+      if (!usuarioActual || !usuarios[usuarioActual] || usuarios[usuarioActual].rol !== "admin") return;
 
       const pendDiv = document.getElementById("pendientes");
       const aprovDiv = document.getElementById("aprobados");
