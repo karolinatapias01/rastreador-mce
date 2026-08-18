@@ -305,6 +305,66 @@
       font-size: 12px;
       font-weight: 700;
     }
+    .pasos-toggle {
+      background: #003366;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s;
+    }
+    .pasos-toggle:hover {
+      background: #00264d;
+    }
+    .pasos-grid.collapsed {
+      display: none;
+    }
+    .pasos-grid.expanded {
+      display: grid;
+    }
+    
+    /* MOBILE RESPONSIVO */
+    @media (max-width: 768px) {
+      .container { padding: 10px; }
+      .header { 
+        padding: 16px;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .header h1 { font-size: 20px; }
+      .header-right { width: 100%; justify-content: space-between; }
+      .panel { padding: 16px; margin-bottom: 15px; }
+      .pasos-grid { 
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .paso { 
+        padding: 10px;
+        font-size: 12px;
+      }
+      .paso-icon { font-size: 16px; }
+      .res-item { padding: 12px; margin: 8px 0; }
+      .res-header { flex-direction: column; gap: 10px; }
+      .res-estab { font-size: 15px; }
+      .pasos-toggle { padding: 10px; font-size: 13px; }
+      .btn { padding: 8px 12px; font-size: 12px; }
+      .input { padding: 10px; font-size: 14px; }
+      .tab { padding: 10px; font-size: 13px; }
+    }
+    
+    @media (max-width: 480px) {
+      .header h1 { font-size: 18px; }
+      .user-badge { font-size: 11px; padding: 6px 10px; }
+      .pasos-grid { 
+        grid-template-columns: 1fr;
+      }
+      .res-item { padding: 10px; }
+      .res-estab { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -425,12 +485,12 @@
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
 
-    let usuarioActual = null;
-    let usuarios = {};
-    let pendientes = {};
-    let resoluciones = [];
-    let modalActual = null;
-    let editIdx = null;
+    let pasosExpandido = {};
+
+    function togglePasos(id) {
+      pasosExpandido[id] = !pasosExpandido[id];
+      render();
+    }
 
     db.ref("rastreador/usuarios").on("value", snap => usuarios = snap.val() || {});
     db.ref("rastreador/pendientes").on("value", snap => { 
@@ -584,7 +644,10 @@
           <div class="res-fecha">🕒 ${fecha}</div>`;
 
         if (esAdmin) {
-          html += '<div class="pasos-grid">';
+          const expanded = pasosExpandido[r.id] ? 'expanded' : 'collapsed';
+          const btnText = pasosExpandido[r.id] ? '▼ Ocultar pasos' : '▶ Ver pasos';
+          
+          html += `<div class="pasos-grid ${expanded}">`;
           html += PASOS.map(p => 
             `<div class="paso ${p.num === r.paso ? 'active' : ''}" onclick="cambiarPaso('${r.id}', ${p.num})" title="${p.nombre}">
               <div class="paso-icon">${p.icon}</div>
@@ -592,6 +655,7 @@
             </div>`
           ).join("");
           html += '</div>';
+          html += `<button class="pasos-toggle" onclick="togglePasos('${r.id}')">${btnText}</button>`;
         }
 
         html += '</div>';
