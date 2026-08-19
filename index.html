@@ -601,8 +601,9 @@
 
       <div id="resoluciones-section">
         <div class="panel">
+          <h2 style="margin-bottom: 15px; color: #003366; font-size: 22px;">📋 Resoluciones</h2>
           <div id="adminActions" style="display: none; margin-bottom: 15px;">
-            <button class="btn btn-success" onclick="openModal('nueva')" style="padding: 12px 20px; font-size: 14px;">➕ Nueva Resolución</button>
+            <button class="btn btn-success" onclick="openModal('nueva')" style="padding: 12px 20px; font-size: 14px; width: 100%;">➕ Nueva Resolución</button>
           </div>
           <input type="text" id="buscar" class="input" placeholder="🔍 Buscar por nombre o establecimiento..." onkeyup="render()">
           <div id="lista"></div>
@@ -747,6 +748,12 @@
       document.getElementById("usuarios-section").style.display = tab === "usuarios" ? "block" : "none";
       document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
       event.target.closest(".tab").classList.add("active");
+      
+      // Mantener visible el botón adminActions si es admin y está en resoluciones
+      if (usuarioActual && usuarios[usuarioActual]) {
+        const esAdmin = usuarios[usuarioActual].rol === "admin";
+        document.getElementById("adminActions").style.display = (esAdmin && tab === "resoluciones") ? "block" : "none";
+      }
     }
 
     function actualizarBadge() {
@@ -839,6 +846,7 @@
       const rol = esAdmin ? " (ADMIN)" : "";
       document.getElementById("userInfo").textContent = u.nombre + rol;
       document.getElementById("tabUsuarios").style.display = esAdmin ? "block" : "none";
+      document.getElementById("adminActions").style.display = esAdmin ? "block" : "none";
       
       setTimeout(() => {
         renderUsuarios();
