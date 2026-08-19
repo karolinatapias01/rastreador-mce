@@ -489,6 +489,7 @@
     let usuarioActual = null;
     let modalActual = null;
     let pasosExpandido = {};
+    let usuariosLoaded = false;
 
     const PASOS = [
       { num: 0, nombre: "Omar sin elaborar", icon: "👨" },
@@ -501,9 +502,12 @@
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
 
-    // ✅ LISTENERS FIREBASE
+    // ✅ LISTENERS FIREBASE - CON SINCRONIZACIÓN MEJORADA
     db.ref("rastreador/usuarios").on("value", snap => {
       usuarios = snap.val() || {};
+      usuariosLoaded = true;
+      renderUsuarios();
+      render();
     });
 
     db.ref("rastreador/pendientes").on("value", snap => { 
@@ -623,7 +627,12 @@
       document.getElementById("userInfo").textContent = u.nombre + rol;
       document.getElementById("tabUsuarios").style.display = esAdmin ? "block" : "none";
       document.getElementById("adminActions").style.display = esAdmin ? "block" : "none";
-      render();
+      
+      // ✅ FUERZA RENDERIZADO DESPUÉS DE 300ms PARA GARANTIZAR DATOS CARGADOS
+      setTimeout(() => {
+        renderUsuarios();
+        render();
+      }, 300);
     }
 
     function togglePasos(id) {
