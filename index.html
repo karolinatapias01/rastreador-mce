@@ -334,7 +334,174 @@
     .pasos-grid.expanded {
       display: grid;
     }
-    
+
+    /* ========== ESTILOS DASHBOARD ========== */
+    .dashboard-header {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .kpi-card {
+      background: linear-gradient(135deg, #003366 0%, #0052cc 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 51, 102, 0.2);
+      text-align: center;
+    }
+
+    .kpi-numero {
+      font-size: 42px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+
+    .kpi-label {
+      font-size: 13px;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .kpi-card.warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    }
+
+    .kpi-card.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .kpi-card.danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .paso-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s;
+      border-left: 5px solid #003366;
+    }
+
+    .paso-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .paso-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .paso-titulo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    .paso-icon-grande {
+      font-size: 28px;
+    }
+
+    .paso-numero {
+      background: #003366;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .paso-expandir {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #6b7280;
+      transition: transform 0.3s;
+    }
+
+    .paso-expandir.expanded {
+      transform: rotate(180deg);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .paso-contenido {
+      max-height: 500px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      opacity: 1;
+    }
+
+    .paso-contenido.collapsed {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .paso-lista {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .paso-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .paso-item::before {
+      content: "✓";
+      background: #059669;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
     /* MOBILE RESPONSIVO */
     @media (max-width: 768px) {
       .container { padding: 10px; }
@@ -362,6 +529,15 @@
       .btn { padding: 8px 12px; font-size: 12px; }
       .input { padding: 10px; font-size: 14px; }
       .tab { padding: 10px; font-size: 13px; }
+      .dashboard-header {
+        grid-template-columns: 1fr;
+      }
+      .kpi-numero {
+        font-size: 32px;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
     }
     
     @media (max-width: 480px) {
@@ -372,6 +548,9 @@
       }
       .res-item { padding: 10px; }
       .res-estab { font-size: 14px; }
+      .kpi-numero {
+        font-size: 28px;
+      }
     }
   </style>
 </head>
@@ -413,6 +592,7 @@
 
       <div class="tabs">
         <button class="tab active" onclick="switchTab('resoluciones')">📋 Resoluciones</button>
+        <button class="tab" onclick="switchTab('dashboard')">📊 Dashboard</button>
         <button class="tab" id="tabUsuarios" onclick="switchTab('usuarios')" style="display: none; position: relative;">
           👥 Usuarios
           <span class="tab-badge" id="userBadge" style="display: none;">0</span>
@@ -426,6 +606,35 @@
           </div>
           <input type="text" id="buscar" class="input" placeholder="🔍 Buscar por nombre o establecimiento..." onkeyup="render()">
           <div id="lista"></div>
+        </div>
+      </div>
+
+      <div id="dashboard-section" style="display: none;">
+        <div class="panel">
+          <h2 style="margin-bottom: 20px; color: #003366; font-size: 22px;">📈 Dashboard - Estado de Resoluciones</h2>
+          
+          <!-- TARJETAS KPI -->
+          <div class="dashboard-header">
+            <div class="kpi-card">
+              <div class="kpi-label">📋 Total</div>
+              <div class="kpi-numero" id="kpiTotal">0</div>
+            </div>
+            <div class="kpi-card warning">
+              <div class="kpi-label">⚙️ En Proceso</div>
+              <div class="kpi-numero" id="kpiProceso">0</div>
+            </div>
+            <div class="kpi-card success">
+              <div class="kpi-label">✅ Completadas</div>
+              <div class="kpi-numero" id="kpiCompletas">0</div>
+            </div>
+            <div class="kpi-card danger">
+              <div class="kpi-label">📊 % Avance</div>
+              <div class="kpi-numero" id="kpiPorcentaje">0%</div>
+            </div>
+          </div>
+
+          <!-- TARJETAS POR PASO -->
+          <div id="dashboardPasos"></div>
         </div>
       </div>
 
@@ -482,13 +691,14 @@
     firebase.initializeApp(config);
     const db = firebase.database();
 
-    // ✅ VARIABLES GLOBALES - INICIALIZACIÓN CRÍTICA
+    // ✅ VARIABLES GLOBALES
     let resoluciones = [];
     let usuarios = {};
     let pendientes = {};
     let usuarioActual = null;
     let modalActual = null;
     let pasosExpandido = {};
+    let dashboardExpandido = {};
     let usuariosLoaded = false;
 
     const PASOS = [
@@ -502,12 +712,13 @@
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
 
-    // ✅ LISTENERS FIREBASE - CON SINCRONIZACIÓN MEJORADA
+    // ✅ LISTENERS FIREBASE
     db.ref("rastreador/usuarios").on("value", snap => {
       usuarios = snap.val() || {};
       usuariosLoaded = true;
       renderUsuarios();
       render();
+      renderDashboard();
     });
 
     db.ref("rastreador/pendientes").on("value", snap => { 
@@ -520,6 +731,7 @@
       let data = snap.val() || [];
       resoluciones = Array.isArray(data) ? data : Object.values(data);
       render();
+      renderDashboard();
     });
 
     function showTab(tab) {
@@ -531,6 +743,7 @@
 
     function switchTab(tab) {
       document.getElementById("resoluciones-section").style.display = tab === "resoluciones" ? "block" : "none";
+      document.getElementById("dashboard-section").style.display = tab === "dashboard" ? "block" : "none";
       document.getElementById("usuarios-section").style.display = tab === "usuarios" ? "block" : "none";
       document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
       event.target.closest(".tab").classList.add("active");
@@ -626,18 +839,22 @@
       const rol = esAdmin ? " (ADMIN)" : "";
       document.getElementById("userInfo").textContent = u.nombre + rol;
       document.getElementById("tabUsuarios").style.display = esAdmin ? "block" : "none";
-      document.getElementById("adminActions").style.display = esAdmin ? "block" : "none";
       
-      // ✅ FUERZA RENDERIZADO DESPUÉS DE 300ms PARA GARANTIZAR DATOS CARGADOS
       setTimeout(() => {
         renderUsuarios();
         render();
+        renderDashboard();
       }, 300);
     }
 
     function togglePasos(id) {
       pasosExpandido[id] = !pasosExpandido[id];
       render();
+    }
+
+    function toggleDashboard(paso) {
+      dashboardExpandido[paso] = !dashboardExpandido[paso];
+      renderDashboard();
     }
 
     function render() {
@@ -688,6 +905,83 @@
 
         html += '</div>';
         return html;
+      }).join("");
+    }
+
+    function renderDashboard() {
+      if (!usuarioActual || !usuarios[usuarioActual]) {
+        return;
+      }
+
+      // Calcular estadísticas por paso
+      const estadisticas = {};
+      PASOS.forEach(p => {
+        estadisticas[p.num] = {
+          nombre: p.nombre,
+          icon: p.icon,
+          total: 0,
+          establecimientos: []
+        };
+      });
+
+      resoluciones.forEach(r => {
+        const paso = r.paso || 0;
+        if (estadisticas[paso]) {
+          estadisticas[paso].total++;
+          estadisticas[paso].establecimientos.push(r.estab);
+        }
+      });
+
+      // Calcular KPIs
+      const totalResoluciones = resoluciones.length;
+      const completadas = estadisticas[7].total;
+      const enProceso = totalResoluciones - completadas;
+      const porcentajeAvance = totalResoluciones > 0 ? Math.round((completadas / totalResoluciones) * 100) : 0;
+
+      document.getElementById("kpiTotal").textContent = totalResoluciones;
+      document.getElementById("kpiProceso").textContent = enProceso;
+      document.getElementById("kpiCompletas").textContent = completadas;
+      document.getElementById("kpiPorcentaje").textContent = porcentajeAvance + "%";
+
+      // Renderizar tarjetas por paso
+      const dashboardPasos = document.getElementById("dashboardPasos");
+      dashboardPasos.innerHTML = PASOS.map(paso => {
+        const stats = estadisticas[paso.num];
+        const porcentaje = totalResoluciones > 0 ? Math.round((stats.total / totalResoluciones) * 100) : 0;
+        const isExpanded = dashboardExpandido[paso.num];
+
+        return `
+          <div class="paso-card">
+            <div class="paso-header" onclick="toggleDashboard(${paso.num})">
+              <div class="paso-titulo">
+                <span class="paso-icon-grande">${paso.icon}</span>
+                <span>${paso.nombre}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="paso-numero">${stats.total}</div>
+                <button class="paso-expandir ${isExpanded ? 'expanded' : ''}">▼</button>
+              </div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: ${porcentaje}%"></div>
+            </div>
+
+            <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+              ${porcentaje}% del total
+            </div>
+
+            ${stats.total > 0 ? `
+              <div class="paso-contenido ${isExpanded ? '' : 'collapsed'}">
+                <div class="paso-lista">
+                  ${stats.establecimientos.map(estab => 
+                    `<div class="paso-item">${estab}</div>`
+                  ).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
       }).join("");
     }
 
