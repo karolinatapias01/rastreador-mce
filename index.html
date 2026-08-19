@@ -53,6 +53,10 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,51,102,0.2);
     }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .btn-danger { background: #dc2626; }
     .btn-danger:hover { background: #991b1b; }
     .btn-success { background: #059669; }
@@ -66,6 +70,7 @@
       border-radius: 8px;
       font-size: 14px;
       transition: all 0.3s;
+      max-length: 100;
     }
     .input:focus { 
       outline: none;
@@ -212,6 +217,9 @@
       z-index: 1000;
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       animation: slideIn 0.3s ease-out;
+    }
+    .notif.error {
+      background: #dc2626;
     }
     @keyframes slideIn { 
       from { transform: translateX(400px); opacity: 0; }
@@ -384,9 +392,9 @@
       </div>
 
       <div id="registro" class="form-section" style="display: none;">
-        <input type="text" id="regNombre" class="input" placeholder="Nombre completo">
-        <input type="text" id="regUser" class="input" placeholder="Usuario">
-        <input type="password" id="regPass" class="input" placeholder="Contraseña (mín 6)">
+        <input type="text" id="regNombre" class="input" placeholder="Nombre completo" maxlength="100">
+        <input type="text" id="regUser" class="input" placeholder="Usuario" maxlength="50">
+        <input type="password" id="regPass" class="input" placeholder="Contraseña (mín 6)" maxlength="50">
         <button class="btn btn-success" onclick="registrar()" style="width: 100%;">Crear cuenta</button>
         <div id="regMsg" style="margin-top: 10px; color: red;"></div>
       </div>
@@ -437,8 +445,8 @@
   <div class="modal" id="modalNueva">
     <div class="modal-content">
       <h2 style="color: #003366; margin-bottom: 16px;">📝 Nueva Resolución</h2>
-      <input type="text" id="estabName" class="input" placeholder="Nombre del establecimiento">
-      <button class="btn btn-success" onclick="crearResolucion()" style="width: 100%;">Crear</button>
+      <input type="text" id="estabName" class="input" placeholder="Nombre del establecimiento" maxlength="150">
+      <button class="btn btn-success" id="btnCrear" onclick="crearResolucion()" style="width: 100%;">Crear</button>
       <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 8px; background: #6b7280;">Cancelar</button>
     </div>
   </div>
@@ -446,8 +454,8 @@
   <div class="modal" id="modalEditar">
     <div class="modal-content">
       <h2 style="color: #003366; margin-bottom: 16px;">✏️ Editar Establecimiento</h2>
-      <input type="text" id="editEstabName" class="input" placeholder="Nombre">
-      <button class="btn btn-success" onclick="guardarEdicion()" style="width: 100%;">Guardar</button>
+      <input type="text" id="editEstabName" class="input" placeholder="Nombre" maxlength="150">
+      <button class="btn btn-success" id="btnGuardar" onclick="guardarEdicion()" style="width: 100%;">Guardar</button>
       <button class="btn" onclick="closeModal()" style="width: 100%; margin-top: 8px; background: #6b7280;">Cancelar</button>
     </div>
   </div>
@@ -474,6 +482,14 @@
     firebase.initializeApp(config);
     const db = firebase.database();
 
+    // ✅ VARIABLES GLOBALES - INICIALIZACIÓN CRÍTICA
+    let resoluciones = [];
+    let usuarios = {};
+    let pendientes = {};
+    let usuarioActual = null;
+    let modalActual = null;
+    let pasosExpandido = {};
+
     const PASOS = [
       { num: 0, nombre: "Omar sin elaborar", icon: "👨" },
       { num: 1, nombre: "Doctor Nilson", icon: "📋" },
@@ -485,19 +501,17 @@
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
 
-    let pasosExpandido = {};
+    // ✅ LISTENERS FIREBASE
+    db.ref("rastreador/usuarios").on("value", snap => {
+      usuarios = snap.val() || {};
+    });
 
-    function togglePasos(id) {
-      pasosExpandido[id] = !pasosExpandido[id];
-      render();
-    }
-
-    db.ref("rastreador/usuarios").on("value", snap => usuarios = snap.val() || {});
     db.ref("rastreador/pendientes").on("value", snap => { 
       pendientes = snap.val() || {}; 
       renderUsuarios();
       actualizarBadge();
     });
+
     db.ref("rastreador/resoluciones").on("value", snap => { 
       let data = snap.val() || [];
       resoluciones = Array.isArray(data) ? data : Object.values(data);
@@ -612,6 +626,11 @@
       render();
     }
 
+    function togglePasos(id) {
+      pasosExpandido[id] = !pasosExpandido[id];
+      render();
+    }
+
     function render() {
       if (!usuarioActual || !usuarios[usuarioActual]) {
         return;
@@ -666,9 +685,13 @@
     function crearResolucion() {
       const estab = document.getElementById("estabName").value.trim();
       if (!estab) {
-        notif("❌ Escribe el nombre");
+        notif("❌ Escribe el nombre", true);
         return;
       }
+
+      const btnCrear = document.getElementById("btnCrear");
+      btnCrear.disabled = true;
+      btnCrear.textContent = "⏳ Guardando...";
 
       const fecha = new Date().toLocaleString("es-CO");
       const usuario = usuarios[usuarioActual].nombre;
@@ -676,7 +699,7 @@
 
       const nueva = {
         id,
-        numero: "RES-" + id.slice(-6),
+        numero: "RES-" + id.slice(-8),
         estab,
         paso: 0,
         fechas: { 0: fecha },
@@ -685,17 +708,25 @@
       };
 
       resoluciones.push(nueva);
-      db.ref("rastreador/resoluciones").set(resoluciones);
-
-      document.getElementById("estabName").value = "";
-      closeModal();
-      notif("✅ Resolución creada");
+      
+      db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
+        document.getElementById("estabName").value = "";
+        closeModal();
+        notif("✅ Resolución creada", false);
+        btnCrear.disabled = false;
+        btnCrear.textContent = "Crear";
+      }).catch(err => {
+        notif(`❌ Error: ${err.message}`, true);
+        resoluciones.pop();
+        btnCrear.disabled = false;
+        btnCrear.textContent = "Crear";
+      });
     }
 
     function cambiarPaso(id, paso) {
       const idx = resoluciones.findIndex(r => r.id === id);
       if (idx === -1) {
-        notif("❌ Error al encontrar resolución");
+        notif("❌ Error al encontrar resolución", true);
         return;
       }
 
@@ -713,23 +744,26 @@
       r.historial.push({ paso: Number(paso), fecha, usuario, accion: `Cambio a: ${p.nombre}` });
 
       db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
-        notif(`✅ ${p.nombre}`);
+        notif(`✅ ${p.nombre}`, false);
       }).catch(err => {
-        notif(`❌ ${err.message}`);
+        notif(`❌ ${err.message}`, true);
       });
     }
 
     function openModal(type, id) {
-      const idx = resoluciones.findIndex(r => r.id === id);
-      if (idx === -1) {
-        notif("❌ Error");
-        return;
-      }
-      
       if (type === "nueva") {
         document.getElementById("modalNueva").classList.add("show");
         document.getElementById("estabName").focus();
-      } else if (type === "editar") {
+        return;
+      }
+
+      const idx = resoluciones.findIndex(r => r.id === id);
+      if (idx === -1) {
+        notif("❌ Error", true);
+        return;
+      }
+      
+      if (type === "editar") {
         document.getElementById("editEstabName").value = resoluciones[idx].estab;
         document.getElementById("modalEditar").classList.add("show");
         document.getElementById("editEstabName").focus();
@@ -750,13 +784,19 @@
     function guardarEdicion() {
       const nuevoNombre = document.getElementById("editEstabName").value.trim();
       if (!nuevoNombre) {
-        notif("❌ Escribe un nombre");
+        notif("❌ Escribe un nombre", true);
         return;
       }
 
+      const btnGuardar = document.getElementById("btnGuardar");
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = "⏳ Guardando...";
+
       const idx = resoluciones.findIndex(r => r.id === modalActual);
       if (idx === -1) {
-        notif("❌ Error");
+        notif("❌ Error", true);
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar";
         return;
       }
 
@@ -768,9 +808,13 @@
 
       db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
         closeModal();
-        notif("✅ Guardado");
+        notif("✅ Guardado", false);
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar";
       }).catch(err => {
-        notif(`❌ ${err.message}`);
+        notif(`❌ ${err.message}`, true);
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar";
       });
     }
 
@@ -778,9 +822,9 @@
       if (confirm("¿Eliminar esta resolución?")) {
         resoluciones = resoluciones.filter(r => r.id !== id);
         db.ref("rastreador/resoluciones").set(resoluciones).then(() => {
-          notif("✅ Eliminado");
+          notif("✅ Eliminado", false);
         }).catch(err => {
-          notif(`❌ ${err.message}`);
+          notif(`❌ ${err.message}`, true);
         });
       }
     }
@@ -833,18 +877,18 @@
       delete pendientes[user];
       db.ref("rastreador/usuarios").set(usuarios);
       db.ref("rastreador/pendientes").set(pendientes);
-      notif("✅ Usuario aprobado");
+      notif("✅ Usuario aprobado", false);
     }
 
     function cambiarRol(user, nuevoRol) {
       usuarios[user].rol = nuevoRol;
       db.ref("rastreador/usuarios").set(usuarios);
-      notif("✅ Rol actualizado");
+      notif("✅ Rol actualizado", false);
     }
 
-    function notif(msg) {
+    function notif(msg, esError = false) {
       const div = document.createElement("div");
-      div.className = "notif";
+      div.className = esError ? "notif error" : "notif";
       div.textContent = msg;
       document.body.appendChild(div);
       setTimeout(() => div.remove(), 2500);
