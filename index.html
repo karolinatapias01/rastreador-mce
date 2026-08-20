@@ -77,11 +77,29 @@
       border-color: #003366;
       box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
     }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .checkbox-container label {
+      cursor: pointer;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 500;
+    }
     .tabs { 
       display: flex;
       gap: 0;
       margin-bottom: 20px;
       border-bottom: 2px solid #e5e7eb;
+      overflow-x: auto;
     }
     .tab { 
       padding: 12px 20px;
@@ -94,6 +112,7 @@
       border-bottom: 3px solid transparent;
       transition: all 0.3s;
       position: relative;
+      white-space: nowrap;
     }
     .tab.active { 
       color: #003366;
@@ -132,6 +151,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .res-estab { 
       font-size: 16px;
@@ -338,7 +359,7 @@
     /* ========== ESTILOS DASHBOARD ========== */
     .dashboard-header {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 15px;
       margin-bottom: 30px;
     }
@@ -346,20 +367,20 @@
     .kpi-card {
       background: linear-gradient(135deg, #003366 0%, #0052cc 100%);
       color: white;
-      padding: 24px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0, 51, 102, 0.2);
       text-align: center;
     }
 
     .kpi-numero {
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 700;
       margin: 10px 0;
     }
 
     .kpi-label {
-      font-size: 13px;
+      font-size: 12px;
       opacity: 0.9;
       font-weight: 500;
     }
@@ -468,6 +489,27 @@
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid #e5e7eb;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .paso-lista::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .paso-lista::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    .paso-lista::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .paso-lista::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
 
     .paso-item {
@@ -480,6 +522,15 @@
       border-radius: 8px;
       font-size: 13px;
       color: #374151;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .paso-item:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      transform: translateX(4px);
     }
 
     .paso-item::before {
@@ -494,12 +545,6 @@
       justify-content: center;
       font-weight: 700;
       flex-shrink: 0;
-    }
-
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
     }
 
     /* MOBILE RESPONSIVO */
@@ -530,13 +575,27 @@
       .input { padding: 10px; font-size: 14px; }
       .tab { padding: 10px; font-size: 13px; }
       .dashboard-header {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
       }
       .kpi-numero {
-        font-size: 32px;
+        font-size: 28px;
       }
-      .dashboard-grid {
-        grid-template-columns: 1fr;
+      .kpi-label {
+        font-size: 11px;
+      }
+      .kpi-card {
+        padding: 15px;
+      }
+      .paso-titulo {
+        font-size: 14px;
+        gap: 8px;
+      }
+      .paso-icon-grande {
+        font-size: 24px;
+      }
+      .paso-lista {
+        max-height: 250px;
       }
     }
     
@@ -548,8 +607,14 @@
       }
       .res-item { padding: 10px; }
       .res-estab { font-size: 14px; }
+      .dashboard-header {
+        grid-template-columns: 1fr;
+      }
       .kpi-numero {
-        font-size: 28px;
+        font-size: 24px;
+      }
+      .kpi-label {
+        font-size: 10px;
       }
     }
   </style>
@@ -566,6 +631,10 @@
       <div id="login" class="form-section">
         <input type="text" id="loginUser" class="input" placeholder="Usuario">
         <input type="password" id="loginPass" class="input" placeholder="Contraseña">
+        <div class="checkbox-container">
+          <input type="checkbox" id="recordarUsuario">
+          <label for="recordarUsuario">Recordar usuario y contraseña</label>
+        </div>
         <button class="btn btn-success" onclick="login()" style="width: 100%;">Ingresar</button>
         <div id="loginMsg" style="margin-top: 10px; color: red;"></div>
       </div>
@@ -701,6 +770,7 @@
     let pasosExpandido = {};
     let dashboardExpandido = {};
     let usuariosLoaded = false;
+    let filtroResolucionDashboard = null;
 
     const PASOS = [
       { num: 0, nombre: "Omar sin elaborar", icon: "👨" },
@@ -712,6 +782,17 @@
       { num: 6, nombre: "Por Notificar", icon: "📧" },
       { num: 7, nombre: "Notificada", icon: "✅" }
     ];
+
+    // ✅ CARGAR CREDENCIALES GUARDADAS
+    function cargarCredencialesGuardadas() {
+      const usuarioGuardado = localStorage.getItem("rastreador_user");
+      const contraGuardada = localStorage.getItem("rastreador_pass");
+      if (usuarioGuardado && contraGuardada) {
+        document.getElementById("loginUser").value = usuarioGuardado;
+        document.getElementById("loginPass").value = contraGuardada;
+        document.getElementById("recordarUsuario").checked = true;
+      }
+    }
 
     // ✅ LISTENERS FIREBASE
     db.ref("rastreador/usuarios").on("value", snap => {
@@ -749,7 +830,6 @@
       document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
       event.target.closest(".tab").classList.add("active");
       
-      // Mantener visible el botón adminActions si es admin y está en resoluciones
       if (usuarioActual && usuarios[usuarioActual]) {
         const esAdmin = usuarios[usuarioActual].rol === "admin";
         document.getElementById("adminActions").style.display = (esAdmin && tab === "resoluciones") ? "block" : "none";
@@ -770,6 +850,7 @@
     function login() {
       const user = document.getElementById("loginUser").value.trim().toLowerCase();
       const pass = document.getElementById("loginPass").value;
+      const recordar = document.getElementById("recordarUsuario").checked;
       const msg = document.getElementById("loginMsg");
 
       msg.textContent = "";
@@ -786,6 +867,15 @@
       if (!usuarios[user] || usuarios[user].pass !== pass) {
         msg.textContent = "❌ Usuario o contraseña incorrectos";
         return;
+      }
+
+      // ✅ GUARDAR CREDENCIALES SI MARCÓ RECORDAR
+      if (recordar) {
+        localStorage.setItem("rastreador_user", user);
+        localStorage.setItem("rastreador_pass", pass);
+      } else {
+        localStorage.removeItem("rastreador_user");
+        localStorage.removeItem("rastreador_pass");
       }
 
       usuarioActual = user;
@@ -936,7 +1026,7 @@
         const paso = r.paso || 0;
         if (estadisticas[paso]) {
           estadisticas[paso].total++;
-          estadisticas[paso].establecimientos.push(r.estab);
+          estadisticas[paso].establecimientos.push({ nombre: r.estab, id: r.id });
         }
       });
 
@@ -983,7 +1073,7 @@
               <div class="paso-contenido ${isExpanded ? '' : 'collapsed'}">
                 <div class="paso-lista">
                   ${stats.establecimientos.map(estab => 
-                    `<div class="paso-item">${estab}</div>`
+                    `<div class="paso-item" onclick="irAResolucionesConFiltro('${estab.id}', '${estab.nombre.replace(/'/g, "\\'")}')">${estab.nombre}</div>`
                   ).join('')}
                 </div>
               </div>
@@ -991,6 +1081,23 @@
           </div>
         `;
       }).join("");
+    }
+
+    function irAResolucionesConFiltro(resolucionId, nombreEstab) {
+      filtroResolucionDashboard = resolucionId;
+      switchTab('resoluciones');
+      
+      setTimeout(() => {
+        const buscar = document.getElementById("buscar");
+        buscar.value = nombreEstab;
+        render();
+        
+        // Scroll a la resolución
+        const resItem = document.querySelector(`[data-res-id="${resolucionId}"]`);
+        if (resItem) {
+          resItem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     }
 
     function crearResolucion() {
@@ -1208,6 +1315,9 @@
     window.addEventListener("click", e => {
       if (e.target.classList.contains("modal")) closeModal();
     });
+
+    // ✅ CARGAR CREDENCIALES GUARDADAS AL INICIAR
+    window.addEventListener("load", cargarCredencialesGuardadas);
   </script>
 </body>
 </html>
