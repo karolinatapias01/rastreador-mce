@@ -608,7 +608,7 @@
       .res-item { padding: 10px; }
       .res-estab { font-size: 14px; }
       .dashboard-header {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       .kpi-numero {
         font-size: 24px;
@@ -1090,6 +1090,10 @@
       setTimeout(() => {
         const buscar = document.getElementById("buscar");
         buscar.value = nombreEstab;
+        
+        // ✅ EXPANDIR AUTOMÁTICAMENTE LOS PASOS
+        pasosExpandido[resolucionId] = true;
+        
         render();
         
         // Scroll a la resolución
