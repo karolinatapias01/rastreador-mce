@@ -827,8 +827,18 @@
       document.getElementById("resoluciones-section").style.display = tab === "resoluciones" ? "block" : "none";
       document.getElementById("dashboard-section").style.display = tab === "dashboard" ? "block" : "none";
       document.getElementById("usuarios-section").style.display = tab === "usuarios" ? "block" : "none";
-      document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
-      event.target.closest(".tab").classList.add("active");
+      
+      // ✅ ARREGLAR: Activar el tab correcto sin depender de event
+      document.querySelectorAll(".tabs .tab").forEach(t => {
+        t.classList.remove("active");
+        if (tab === "resoluciones" && t.textContent.includes("Resoluciones")) {
+          t.classList.add("active");
+        } else if (tab === "dashboard" && t.textContent.includes("Dashboard")) {
+          t.classList.add("active");
+        } else if (tab === "usuarios" && t.textContent.includes("Usuarios")) {
+          t.classList.add("active");
+        }
+      });
       
       if (usuarioActual && usuarios[usuarioActual]) {
         const esAdmin = usuarios[usuarioActual].rol === "admin";
@@ -1073,7 +1083,7 @@
               <div class="paso-contenido ${isExpanded ? '' : 'collapsed'}">
                 <div class="paso-lista">
                   ${stats.establecimientos.map(estab => 
-                    `<div class="paso-item" onclick="irAResolucionesConFiltro('${estab.id}', '${estab.nombre.replace(/'/g, "\\'")}')">${estab.nombre}</div>`
+                    `<div class="paso-item" data-res-id="${estab.id}" onclick="irAResolucionesConFiltro('${estab.id}')">${estab.nombre}</div>`
                   ).join('')}
                 </div>
               </div>
@@ -1083,13 +1093,20 @@
       }).join("");
     }
 
-    function irAResolucionesConFiltro(resolucionId, nombreEstab) {
+    function irAResolucionesConFiltro(resolucionId) {
+      // Encontrar el establecimiento
+      const resolucion = resoluciones.find(r => r.id === resolucionId);
+      if (!resolucion) {
+        notif("❌ No se encontró la resolución", true);
+        return;
+      }
+      
       filtroResolucionDashboard = resolucionId;
       switchTab('resoluciones');
       
       setTimeout(() => {
         const buscar = document.getElementById("buscar");
-        buscar.value = nombreEstab;
+        buscar.value = resolucion.estab;
         
         // ✅ EXPANDIR AUTOMÁTICAMENTE LOS PASOS
         pasosExpandido[resolucionId] = true;
