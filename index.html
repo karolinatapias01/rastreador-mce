@@ -671,8 +671,9 @@
       <div id="resoluciones-section">
         <div class="panel">
           <h2 style="margin-bottom: 15px; color: #003366; font-size: 22px;">📋 Resoluciones</h2>
-          <div id="adminActions" style="display: none; margin-bottom: 15px;">
-            <button class="btn btn-success" onclick="openModal('nueva')" style="padding: 12px 20px; font-size: 14px; width: 100%;">➕ Nueva Resolución</button>
+          <div id="adminActions" style="display: none; margin-bottom: 15px; display: flex; gap: 10px;">
+            <button class="btn btn-success" onclick="openModal('nueva')" style="padding: 12px 20px; font-size: 14px; flex: 1;">➕ Nueva Resolución</button>
+            <button class="btn" onclick="importarEstablecimientosAChecklist()" style="padding: 12px 20px; font-size: 14px; flex: 1; background-color: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">📥 Importar 67 Establecimientos</button>
           </div>
           <input type="text" id="buscar" class="input" placeholder="🔍 Buscar por nombre o establecimiento..." onkeyup="render()">
           <div id="lista"></div>
@@ -1123,6 +1124,108 @@
       }, 100);
     }
 
+    function importarEstablecimientosAChecklist() {
+      // 67 establecimientos
+      const establecimientos = [
+        "RTS SUCURSAL BUCARAMANGA",
+        "RTS SUCURSAL SAN GIL",
+        "ESE HOSPITAL REGIONAL SAN GIL",
+        "DISTRICLINICOS ALFA SAS",
+        "DISTRIHOSPITALARIOS AMPLIACION",
+        "INSTITUTO CARDIOVASCULAR PIEDECUESTA AMPLIACION",
+        "FUNDACION CARDIOVASCULAR BOSQUE AMPLIACION",
+        "DROSALUD GIRON",
+        "ESP SALUD IPS AMPLIACION",
+        "ESTABLECIMIENTO VETERINARIO EL TORO INCLUSION",
+        "CLINIPHARMA  INSCRIPCION",
+        "CM COLSUBSIDIO BUCARAMANGA AMPLIACION",
+        "ALEMANA 26 INCLUSION",
+        "ALEMANA 10 BARRANCA INCLUSION",
+        "ALEMANA 39 SOCORRO INCLUSION",
+        "CLINICA PSIQUIATRICA ISNOR AMPLIACION",
+        "SOLINSA GC SAS AMPLIACION",
+        "DIAGNOSTIMEDICOS Y DROGAS SAS AMPLIACION",
+        "GASTROANIMAL INSCRIPCION",
+        "CLINICA ALIVIAR AMPLIACION",
+        "RAMEDICAS AMPLIACION",
+        "UNIDROGAS MEDICATEL 2 AMPLIACION",
+        "HOSPITAL LOS COMUNEROS AMPLIACION",
+        "NEUROMEDICA PIEDECUESTA AMPLIACION",
+        "NEWMED FLORIDABLANCA AMPLIACION",
+        "NEUROMEDICA CABECERA AMPLIACION",
+        "SALUD VITAL DE COLOMBIA AMPLIACION",
+        "CENTRO CLINICO ESPECIALIZADO DEL ORIENTE",
+        "BLANCO PHARMA INSCRIPCION",
+        "APREHSI GROUP",
+        "UNIDHOS RENOVACION",
+        "CLINICA MATERNO INFANTIL SAN LUIS AMPLIACION",
+        "CLINICA RIVIERA AMPLIACION",
+        "SPECT MEDICINA NUCLEAR MODIFICACION",
+        "BATALLON JOSE ANTONIO GALAN AMPLIACION",
+        "RTS BARRANCA INSCRIPCION",
+        "VIRREY SOLIS AMPLIACION",
+        "VIRREY SOLIS SOTOMAYOR AMPLIACION",
+        "HEALT AND LIFE IPS AMBULANCIA INSCRIPCION",
+        "NUEVA ALIANZA EMANUEL DROGUERIA INSCRIPCION",
+        "VETERINARIA SAHUESOS INSCRIPCION",
+        "SIES ONCOSAS  INSCRIPCION",
+        "FUNES GASTRO ADVANCE INSCRIPCION",
+        "TIENDA MASCOTAS MAWI GIRON INSCRIPCION",
+        "SINAPSIS IPS INCLUSION",
+        "BATALLON # 5 ETICOS INCLUSION",
+        "BATALLON BUCARAMANGA- BARRANCA SOCORRO",
+        "REPREFARCOS SAS INCLUSION",
+        "DISFARMA BUCARAMANGA CALLE 48 32 69 INSCRIPCION",
+        "DISFARMA SABANA INSCRIPCION",
+        "DISFARMA SANGIL INSCRIPCION",
+        "DISFARMA BARRANCA INSCRIPCION",
+        "LA REBAJA PLUS #1 PIEDECUESTA RENOVACION",
+        "LA REBAJA PLUS #2 BUCARAMANGA RENOVACION",
+        "LA REBAJA PLUS# 3 BUCARAMANGA",
+        "REBAJA PLUS #4 BUCARAMANGA RENOVACION",
+        "REBAJA PLUS #5 BUCARAMANGA RENOVACION",
+        "REBAJA PLUS #6 FLORIDABLANCA RENOVACION",
+        "REBAJA PLUS #7 BUCARAMANGA RENOVACION",
+        "REBAJA PLUS #10 BUCARAMANGA CIERRE",
+        "REBAJA PLUS #15 BUCARAMANGA RENOVACION",
+        "REBAJA #21 BUCARAMANGA RENOVACION",
+        "REBAJA PLUS #1 BARBOSA RENOVACION",
+        "REBAJA PLUS #1 SAN VICENTE RENOVACION",
+        "AUDIOFON AMPLIACION",
+        "FOSCAL SAN ALONSO RENOVACION",
+        "FOSCAL BOLARQUI RENOVACION"
+      ];
+
+      const btn = document.querySelector('button[onclick="importarEstablecimientosAChecklist()"]');
+      btn.disabled = true;
+      btn.textContent = "⏳ Importando 67...";
+
+      // Crear nuevas resoluciones
+      const ahora = Date.now();
+      const nuevas = establecimientos.map((estab, idx) => ({
+        id: String(ahora + idx),
+        numero: "",
+        estab: estab,
+        paso: -1,
+        fechas: {},
+        autores: {},
+        historial: []
+      }));
+
+      // Combinar con existentes
+      const todas = [...resoluciones, ...nuevas];
+
+      // Guardar en Firebase
+      db.ref("rastreador/resoluciones").set(todas).then(() => {
+        notif(`✅ ${nuevas.length} establecimientos importados a Checklist`, false);
+        btn.disabled = false;
+        btn.textContent = "✅ Importados";
+        btn.style.backgroundColor = "#10b981";
+      }).catch(err => {
+        notif(`❌ Error: ${err.message}`, true);
+        btn.disabled = false;
+        btn.textContent = "❌ Reintentar";
+      });
     }
 
     function crearResolucion() {
