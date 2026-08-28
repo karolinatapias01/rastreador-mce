@@ -1403,11 +1403,12 @@
             <div class="usuario-nombre">✓ ${u.nombre}</div>
             <div class="usuario-rol">${user} - <span class="usuario-status aprobado">${u.rol}</span></div>
           </div>
-          <div class="usuario-actions">
+          <div class="usuario-actions" style="display: flex; gap: 8px;">
             <select onchange="cambiarRol('${user}', this.value)">
               <option value="user" ${u.rol === "user" ? "selected" : ""}>Usuario</option>
               <option value="admin" ${u.rol === "admin" ? "selected" : ""}>Admin</option>
             </select>
+            <button class="btn btn-sm btn-danger" onclick="eliminarUsuario('${user}')" title="Eliminar usuario" style="padding: 6px 12px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Eliminar</button>
           </div>
         </div>
       `).join("");
@@ -1429,6 +1430,15 @@
       usuarios[user].rol = nuevoRol;
       db.ref("rastreador/usuarios").set(usuarios);
       notif("✅ Rol actualizado", false);
+    }
+
+    function eliminarUsuario(user) {
+      if (confirm(`⚠️ ¿Eliminar usuario "${user}"? Esta acción no se puede deshacer.`)) {
+        delete usuarios[user];
+        db.ref("rastreador/usuarios").set(usuarios);
+        render();
+        notif(`✅ Usuario "${user}" eliminado`, false);
+      }
     }
 
     function notif(msg, esError = false) {
